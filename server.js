@@ -15,7 +15,13 @@ app.use('/webhook', express.raw({ type: '*/*' }));
 app.use('/api', express.json());
 
 // ─── ヘルスチェック ───────────────────────────────────────────────
-app.get('/health', (req, res) => res.json({ status: 'ok' }));
+app.get('/health', (req, res) => res.json({
+  status: 'ok',
+  hasSecret: !!process.env.CHANNEL_SECRET,
+  hasToken: !!process.env.CHANNEL_ACCESS_TOKEN,
+  secretHead: process.env.CHANNEL_SECRET?.slice(0, 4),
+  tokenHead: process.env.CHANNEL_ACCESS_TOKEN?.slice(0, 6),
+}));
 
 // ─── LINE Webhook ────────────────────────────────────────────────
 app.post('/webhook', async (req, res) => {
