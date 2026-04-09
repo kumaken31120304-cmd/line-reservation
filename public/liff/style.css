@@ -1,0 +1,370 @@
+/* ─── リセット・ベース ─────────────────────────────────── */
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+  -webkit-tap-highlight-color: transparent;
+}
+
+body {
+  font-family: -apple-system, BlinkMacSystemFont, 'Hiragino Sans', 'Noto Sans JP', sans-serif;
+  background: #f0f4f0;
+  color: #333;
+  min-height: 100vh;
+  padding-bottom: 40px;
+}
+
+/* ─── ローディング ──────────────────────────────────────── */
+.loading {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 100vh;
+  gap: 16px;
+  color: #666;
+}
+
+.spinner {
+  width: 40px;
+  height: 40px;
+  border: 3px solid #e0e0e0;
+  border-top-color: #4CAF50;
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+/* ─── 画面共通 ─────────────────────────────────────────── */
+.screen {
+  max-width: 480px;
+  margin: 0 auto;
+  padding: 20px 16px;
+}
+
+.hidden {
+  display: none !important;
+}
+
+/* ─── ヘッダー ─────────────────────────────────────────── */
+.header {
+  background: linear-gradient(135deg, #4CAF50, #2e7d32);
+  color: white;
+  border-radius: 16px;
+  padding: 28px 20px;
+  text-align: center;
+  margin-bottom: 24px;
+  box-shadow: 0 4px 16px rgba(76, 175, 80, 0.3);
+}
+
+.header-icon {
+  font-size: 40px;
+  margin-bottom: 8px;
+}
+
+.header h1 {
+  font-size: 20px;
+  font-weight: 700;
+  margin-bottom: 4px;
+}
+
+.header p {
+  font-size: 13px;
+  opacity: 0.9;
+}
+
+/* ─── ステップインジケーター ──────────────────────────── */
+.steps {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 24px;
+  gap: 0;
+}
+
+.step {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background: #e0e0e0;
+  color: #999;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 13px;
+  font-weight: 700;
+  transition: all 0.3s;
+  flex-shrink: 0;
+}
+
+.step.active {
+  background: #4CAF50;
+  color: white;
+  box-shadow: 0 2px 8px rgba(76, 175, 80, 0.4);
+}
+
+.step.done {
+  background: #81C784;
+  color: white;
+}
+
+.step-line {
+  flex: 1;
+  height: 2px;
+  background: #e0e0e0;
+  max-width: 60px;
+}
+
+/* ─── フォームカード ───────────────────────────────────── */
+.step-content {
+  background: white;
+  border-radius: 16px;
+  padding: 24px 20px;
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.06);
+}
+
+.step-title {
+  font-size: 16px;
+  font-weight: 700;
+  color: #2e7d32;
+  margin-bottom: 20px;
+}
+
+/* ─── フォームグループ ─────────────────────────────────── */
+.form-group {
+  margin-bottom: 20px;
+}
+
+.form-group label {
+  display: block;
+  font-size: 13px;
+  font-weight: 600;
+  color: #555;
+  margin-bottom: 6px;
+}
+
+.required {
+  color: #e53935;
+}
+
+.form-group input[type="text"],
+.form-group input[type="tel"],
+.form-group input[type="date"],
+.form-group textarea {
+  width: 100%;
+  padding: 12px 14px;
+  border: 1.5px solid #e0e0e0;
+  border-radius: 10px;
+  font-size: 15px;
+  color: #333;
+  background: #fafafa;
+  outline: none;
+  transition: border-color 0.2s;
+  -webkit-appearance: none;
+}
+
+.form-group input:focus,
+.form-group textarea:focus {
+  border-color: #4CAF50;
+  background: white;
+}
+
+.form-group textarea {
+  resize: none;
+}
+
+/* ─── 時間スロット ─────────────────────────────────────── */
+.time-slots {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 8px;
+  margin-top: 4px;
+}
+
+.hint {
+  grid-column: 1 / -1;
+  font-size: 13px;
+  color: #999;
+  text-align: center;
+  padding: 16px;
+}
+
+.time-slot-btn {
+  padding: 10px 6px;
+  border: 1.5px solid #4CAF50;
+  border-radius: 8px;
+  background: white;
+  color: #4CAF50;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+  text-align: center;
+}
+
+.time-slot-btn:hover {
+  background: #e8f5e9;
+}
+
+.time-slot-btn.selected {
+  background: #4CAF50;
+  color: white;
+}
+
+.time-slot-btn.disabled {
+  border-color: #e0e0e0;
+  color: #ccc;
+  cursor: not-allowed;
+  text-decoration: line-through;
+}
+
+.no-slots {
+  grid-column: 1 / -1;
+  font-size: 13px;
+  color: #e53935;
+  text-align: center;
+  padding: 16px;
+}
+
+/* ─── ボタン ───────────────────────────────────────────── */
+.btn {
+  display: block;
+  width: 100%;
+  padding: 14px;
+  border: none;
+  border-radius: 10px;
+  font-size: 15px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.2s;
+  margin-top: 12px;
+}
+
+.btn-primary {
+  background: #4CAF50;
+  color: white;
+  box-shadow: 0 3px 10px rgba(76, 175, 80, 0.3);
+}
+
+.btn-primary:hover {
+  background: #43a047;
+  transform: translateY(-1px);
+}
+
+.btn-secondary {
+  background: #f5f5f5;
+  color: #555;
+  border: 1px solid #ddd;
+}
+
+.btn-submit {
+  background: linear-gradient(135deg, #4CAF50, #2e7d32);
+  color: white;
+  box-shadow: 0 4px 14px rgba(76, 175, 80, 0.4);
+}
+
+.btn-submit:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  transform: none;
+}
+
+.btn-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+  margin-top: 12px;
+}
+
+.btn-row .btn {
+  margin-top: 0;
+}
+
+/* ─── 確認ボックス ─────────────────────────────────────── */
+.confirm-box {
+  background: #f9fbe7;
+  border: 1px solid #dce775;
+  border-radius: 12px;
+  padding: 16px;
+  margin-bottom: 16px;
+}
+
+.confirm-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  padding: 8px 0;
+  border-bottom: 1px solid #f0f0f0;
+  gap: 12px;
+}
+
+.confirm-row:last-child {
+  border-bottom: none;
+}
+
+.confirm-label {
+  font-size: 13px;
+  color: #777;
+  flex-shrink: 0;
+  width: 70px;
+}
+
+.confirm-value {
+  font-size: 14px;
+  font-weight: 600;
+  color: #333;
+  text-align: right;
+}
+
+.note {
+  font-size: 12px;
+  color: #999;
+  text-align: center;
+  margin-bottom: 4px;
+}
+
+/* ─── 完了画面 ─────────────────────────────────────────── */
+.success-icon,
+.error-icon {
+  font-size: 64px;
+  text-align: center;
+  margin-bottom: 20px;
+  margin-top: 40px;
+}
+
+#success-screen h2,
+#error-screen h2 {
+  text-align: center;
+  font-size: 20px;
+  margin-bottom: 16px;
+  color: #2e7d32;
+}
+
+#error-screen h2 { color: #e53935; }
+
+.success-detail {
+  background: white;
+  border-radius: 12px;
+  padding: 16px;
+  margin-bottom: 16px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+}
+
+.success-detail .confirm-row { border-color: #eee; }
+
+.success-note {
+  text-align: center;
+  color: #4CAF50;
+  font-size: 14px;
+  margin-bottom: 20px;
+}
+
+#error-msg {
+  text-align: center;
+  color: #777;
+  margin-bottom: 20px;
+  font-size: 14px;
+}

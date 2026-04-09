@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <title>整体院 予約フォーム</title>
+  <link rel="stylesheet" href="style.css" />
+  <script src="https://static.line-scdn.net/liff/edge/versions/2.22.3/sdk.js"></script>
+</head>
+<body>
+  <div id="app">
+    <!-- ローディング -->
+    <div id="loading" class="loading">
+      <div class="spinner"></div>
+      <p>読み込み中...</p>
+    </div>
+
+    <!-- エラー -->
+    <div id="error-screen" class="screen hidden">
+      <div class="error-icon">⚠️</div>
+      <h2>エラーが発生しました</h2>
+      <p id="error-msg"></p>
+      <button onclick="location.reload()" class="btn btn-primary">再読み込み</button>
+    </div>
+
+    <!-- 完了画面 -->
+    <div id="success-screen" class="screen hidden">
+      <div class="success-icon">✅</div>
+      <h2>予約が完了しました！</h2>
+      <div id="success-detail" class="success-detail"></div>
+      <p class="success-note">LINEに確認メッセージを送りました😊</p>
+      <button onclick="liff.closeWindow()" class="btn btn-primary">閉じる</button>
+    </div>
+
+    <!-- 予約フォーム -->
+    <div id="form-screen" class="screen hidden">
+      <!-- ヘッダー -->
+      <div class="header">
+        <div class="header-icon">🌿</div>
+        <h1>整体院 予約フォーム</h1>
+        <p>ご希望の日時をお選びください</p>
+      </div>
+
+      <!-- ステップインジケーター -->
+      <div class="steps">
+        <div class="step active" id="step-dot-1">1</div>
+        <div class="step-line"></div>
+        <div class="step" id="step-dot-2">2</div>
+        <div class="step-line"></div>
+        <div class="step" id="step-dot-3">3</div>
+      </div>
+
+      <form id="reservation-form">
+        <!-- ステップ1: 日付・時間選択 -->
+        <div id="step-1" class="step-content">
+          <h2 class="step-title">📅 希望日を選んでください</h2>
+
+          <div class="form-group">
+            <label for="date">日付 <span class="required">*</span></label>
+            <input type="date" id="date" name="date" required />
+          </div>
+
+          <div class="form-group">
+            <label>時間 <span class="required">*</span></label>
+            <div id="time-slots" class="time-slots">
+              <p class="hint">日付を選択すると空き時間が表示されます</p>
+            </div>
+            <input type="hidden" id="time" name="time" />
+          </div>
+
+          <button type="button" class="btn btn-primary" onclick="goToStep(2)">次へ →</button>
+        </div>
+
+        <!-- ステップ2: お客様情報 -->
+        <div id="step-2" class="step-content hidden">
+          <h2 class="step-title">👤 お客様情報を入力してください</h2>
+
+          <div class="form-group">
+            <label for="name">お名前 <span class="required">*</span></label>
+            <input type="text" id="name" name="name" placeholder="山田 太郎" required />
+          </div>
+
+          <div class="form-group">
+            <label for="phone">電話番号 <span class="required">*</span></label>
+            <input type="tel" id="phone" name="phone" placeholder="090-0000-0000" required />
+          </div>
+
+          <div class="form-group">
+            <label for="symptoms">症状・ご要望</label>
+            <textarea id="symptoms" name="symptoms" rows="3" placeholder="例：腰痛、肩こりなど"></textarea>
+          </div>
+
+          <div class="btn-row">
+            <button type="button" class="btn btn-secondary" onclick="goToStep(1)">← 戻る</button>
+            <button type="button" class="btn btn-primary" onclick="goToStep(3)">次へ →</button>
+          </div>
+        </div>
+
+        <!-- ステップ3: 確認 -->
+        <div id="step-3" class="step-content hidden">
+          <h2 class="step-title">📋 予約内容をご確認ください</h2>
+
+          <div class="confirm-box">
+            <div class="confirm-row">
+              <span class="confirm-label">日付</span>
+              <span id="confirm-date" class="confirm-value"></span>
+            </div>
+            <div class="confirm-row">
+              <span class="confirm-label">時間</span>
+              <span id="confirm-time" class="confirm-value"></span>
+            </div>
+            <div class="confirm-row">
+              <span class="confirm-label">お名前</span>
+              <span id="confirm-name" class="confirm-value"></span>
+            </div>
+            <div class="confirm-row">
+              <span class="confirm-label">電話番号</span>
+              <span id="confirm-phone" class="confirm-value"></span>
+            </div>
+            <div class="confirm-row" id="confirm-symptoms-row">
+              <span class="confirm-label">症状</span>
+              <span id="confirm-symptoms" class="confirm-value"></span>
+            </div>
+          </div>
+
+          <p class="note">※予約確定後、LINEに確認メッセージが届きます</p>
+
+          <div class="btn-row">
+            <button type="button" class="btn btn-secondary" onclick="goToStep(2)">← 戻る</button>
+            <button type="submit" class="btn btn-submit" id="submit-btn">
+              <span id="submit-label">予約を確定する</span>
+              <span id="submit-spinner" class="hidden">送信中...</span>
+            </button>
+          </div>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <script src="app.js"></script>
+</body>
+</html>

@@ -1,0 +1,25 @@
+services:
+  - type: web
+    name: line-reservation
+    runtime: node
+    buildCommand: npm install
+    startCommand: node server.js
+    envVars:
+      - key: PORT
+        value: 10000
+      - key: CHANNEL_SECRET
+        sync: false
+      - key: CHANNEL_ACCESS_TOKEN
+        sync: false
+      - key: LIFF_ID
+        sync: false
+      - key: BASE_URL
+        sync: false
+      - key: GOOGLE_SERVICE_ACCOUNT_EMAIL
+        sync: false
+      - key: GOOGLE_PRIVATE_KEY
+        sync: false
+      - key: GOOGLE_CALENDAR_ID
+        sync: false
+      - key: GOOGLE_SHEET_ID
+        sync: false
