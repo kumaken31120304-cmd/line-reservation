@@ -1,49 +1,63 @@
-const { Client } = require('@line/bot-sdk');
+const { messagingApi } = require('@line/bot-sdk');
 const { buildMenuFlex, buildReservationConfirmFlex, buildReservationListFlex } = require('./flexMessage');
 const { getAvailableSlots } = require('./calendar');
 const { getUserReservations } = require('./sheets');
 
-const client = new Client({
-  channelSecret: process.env.CHANNEL_SECRET,
+const client = new messagingApi.MessagingApiClient({
   channelAccessToken: process.env.CHANNEL_ACCESS_TOKEN,
 });
 
-// ─── メインイベントハンドラー ──────────────────────────────────────
 async function handleEvent(event) {
   if (event.type !== 'message' || event.message.type !== 'text') return;
   const text = event.message.text.trim();
   const userId = event.source.userId;
 
-  if (text.includes('予約') || text === 'メニュー') {
-    return replyMenu(userId);
+  if (!userId) {
+    console.warn('userId が取得できませんでした');
+    return;
   }
-  if (text.includes('空き') || text.includes('空き時間')) {
-    return replyAvailableSlots(userId);
+
+  console.log(`[handleEvent] userId=${userId}, text="${text}"`);
+
+  try {
+    if (text.includes('予約') || text === 'メニュー') {
+      return await replyMenu(userId);
+    }
+    if (text.includes('空き') || text.includes('空き時間')) {
+      return await replyAvailableSlots(userId);
+    }
+    if (text.includes('確認') || text.includes('予約確認')) {
+      return await replyUserReservations(userId);
+    }
+    if (text.includes('キャンセル')) {
+      return await replyUserReservations(userId, true);
+    }
+    await client.pushMessage({
+      to: userId,
+      messages: [{ type: 'text', text: '「予約」と送信すると予約メニューが表示されます😊' }],
+    });
+  } catch (e) {
+    console.error('[handleEvent] エラー:', e.message || e);
   }
-  if (text.includes('確認') || text.includes('予約確認')) {
-    return replyUserReservations(userId);
-  }
-  if (text.includes('キャンセル')) {
-    return replyUserReservations(userId, true);
-  }
-  // デフォルト返答
-  return client.pushMessage({
-    to: userId,
-    messages: [{ type: 'text', text: '「予約」と送信すると予約メニューが表示されます😊' }],
-  });
 }
 
-// ─── 予約メニュー ─────────────────────────────────────────────────
 async function replyMenu(userId) {
-  return client.pushMessage({
-    to: userId,
-    messages: [buildMenuFlex()],
-  });
+  try {
+    await client.pushMessage({
+      to: userId,
+      messages: [buildMenuFlex()],
+    });
+  } catch (e) {
+    console.error('[replyMenu] エラー:', e.message || e);
+    await client.pushMessage({
+      to: userId,
+      messages: [{ type: 'text', text: 'メニューの表示に失敗しました。しばらく経ってから再度お試しください。' }],
+    }).catch(err => console.error('[replyMenu] フォールバックも失敗:', err.message));
+  }
 }
 
-// ─── 空き時間案内（今日〜3日分） ──────────────────────────────────
 async function replyAvailableSlots(userId) {
-  const lines = ['📅 *直近の空き時間*\n'];
+  const lines = ['�� 直近の空き時間\n'];
   const today = new Date();
   for (let i = 0; i < 3; i++) {
     const d = new Date(today);
@@ -57,45 +71,49 @@ async function replyAvailableSlots(userId) {
       } else {
         lines.push(`${label}（${dateStr}）：${slots.join(' / ')}`);
       }
-    } catch {
+    } catch (e) {
+      console.error(`[replyAvailableSlots] ${dateStr} 取得失敗:`, e.message || e);
       lines.push(`${label}（${dateStr}）：取得失敗`);
     }
   }
   lines.push('\n詳細はこちら👇');
-  return client.pushMessage({
-    to: userId,
-    messages: [
-      { type: 'text', text: lines.join('\n') },
-      buildMenuFlex(),
-    ],
-  });
+  try {
+    await client.pushMessage({
+      to: userId,
+      messages: [
+        { type: 'text', text: lines.join('\n') },
+        buildMenuFlex(),
+      ],
+    });
+  } catch (e) {
+    console.error('[replyAvailableSlots] 送信エラー:', e.message || e);
+  }
 }
 
-// ─── 予約確認 ─────────────────────────────────────────────────────
 async function replyUserReservations(userId, showCancel = false) {
   try {
     const reservations = await getUserReservations(userId);
     const upcoming = reservations.filter(r => r.status !== 'キャンセル済');
     if (upcoming.length === 0) {
-      return client.pushMessage({
+      await client.pushMessage({
         to: userId,
         messages: [{ type: 'text', text: '現在の予約はありません。\n「予約」と送信して予約してください😊' }],
       });
+      return;
     }
-    return client.pushMessage({
+    await client.pushMessage({
       to: userId,
       messages: [buildReservationListFlex(upcoming, showCancel)],
     });
   } catch (e) {
-    console.error(e);
-    return client.pushMessage({
+    console.error('[replyUserReservations] エラー:', e.message || e);
+    await client.pushMessage({
       to: userId,
       messages: [{ type: 'text', text: '予約情報の取得に失敗しました。しばらく経ってから再度お試しください。' }],
-    });
+    }).catch(err => console.error('[replyUserReservations] フォールバックも失敗:', err.message));
   }
 }
 
-// ─── 予約確定通知（APIから呼ばれる） ─────────────────────────────
 async function sendReservationConfirm(userId, reservation) {
   try {
     await client.pushMessage({
@@ -103,11 +121,10 @@ async function sendReservationConfirm(userId, reservation) {
       messages: [buildReservationConfirmFlex(reservation)],
     });
   } catch (e) {
-    console.error('確定通知送信エラー:', e);
+    console.error('[sendReservationConfirm] 確定通知送信エラー:', e.message || e);
   }
 }
 
-// ─── リマインド送信（reminderから呼ばれる） ───────────────────────
 async function sendReminder(userId, reservation) {
   try {
     await client.pushMessage({
@@ -118,7 +135,7 @@ async function sendReminder(userId, reservation) {
       }],
     });
   } catch (e) {
-    console.error('リマインド送信エラー:', e);
+    console.error('[sendReminder] リマインド送信エラー:', e.message || e);
   }
 }
 
