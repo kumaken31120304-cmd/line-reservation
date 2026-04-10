@@ -12,7 +12,7 @@ const client = new Client({
 async function handleEvent(event) {
   if (event.type !== 'message' || event.message.type !== 'text') return;
   const text = event.message.text.trim();
-  const userId = event.source.userId; // replyTokenの代わりにuserIdを使用
+  const userId = event.source.userId;
 
   if (text.includes('予約') || text === 'メニュー') {
     return replyMenu(userId);
@@ -27,15 +27,18 @@ async function handleEvent(event) {
     return replyUserReservations(userId, true);
   }
   // デフォルト返答
-  return client.pushMessage(userId, {
-    type: 'text',
-    text: '「予約」と送信すると予約メニューが表示されます😊',
+  return client.pushMessage({
+    to: userId,
+    messages: [{ type: 'text', text: '「予約」と送信すると予約メニューが表示されます😊' }],
   });
 }
 
 // ─── 予約メニュー ─────────────────────────────────────────────────
 async function replyMenu(userId) {
-  return client.pushMessage(userId, buildMenuFlex());
+  return client.pushMessage({
+    to: userId,
+    messages: [buildMenuFlex()],
+  });
 }
 
 // ─── 空き時間案内（今日〜3日分） ──────────────────────────────────
@@ -59,10 +62,13 @@ async function replyAvailableSlots(userId) {
     }
   }
   lines.push('\n詳細はこちら👇');
-  return client.pushMessage(userId, [
-    { type: 'text', text: lines.join('\n') },
-    buildMenuFlex(),
-  ]);
+  return client.pushMessage({
+    to: userId,
+    messages: [
+      { type: 'text', text: lines.join('\n') },
+      buildMenuFlex(),
+    ],
+  });
 }
 
 // ─── 予約確認 ─────────────────────────────────────────────────────
@@ -71,17 +77,20 @@ async function replyUserReservations(userId, showCancel = false) {
     const reservations = await getUserReservations(userId);
     const upcoming = reservations.filter(r => r.status !== 'キャンセル済');
     if (upcoming.length === 0) {
-      return client.pushMessage(userId, {
-        type: 'text',
-        text: '現在の予約はありません。\n「予約」と送信して予約してください😊',
+      return client.pushMessage({
+        to: userId,
+        messages: [{ type: 'text', text: '現在の予約はありません。\n「予約」と送信して予約してください😊' }],
       });
     }
-    return client.pushMessage(userId, buildReservationListFlex(upcoming, showCancel));
+    return client.pushMessage({
+      to: userId,
+      messages: [buildReservationListFlex(upcoming, showCancel)],
+    });
   } catch (e) {
     console.error(e);
-    return client.pushMessage(userId, {
-      type: 'text',
-      text: '予約情報の取得に失敗しました。しばらく経ってから再度お試しください。',
+    return client.pushMessage({
+      to: userId,
+      messages: [{ type: 'text', text: '予約情報の取得に失敗しました。しばらく経ってから再度お試しください。' }],
     });
   }
 }
@@ -89,7 +98,10 @@ async function replyUserReservations(userId, showCancel = false) {
 // ─── 予約確定通知（APIから呼ばれる） ─────────────────────────────
 async function sendReservationConfirm(userId, reservation) {
   try {
-    await client.pushMessage(userId, buildReservationConfirmFlex(reservation));
+    await client.pushMessage({
+      to: userId,
+      messages: [buildReservationConfirmFlex(reservation)],
+    });
   } catch (e) {
     console.error('確定通知送信エラー:', e);
   }
@@ -98,9 +110,12 @@ async function sendReservationConfirm(userId, reservation) {
 // ─── リマインド送信（reminderから呼ばれる） ───────────────────────
 async function sendReminder(userId, reservation) {
   try {
-    await client.pushMessage(userId, {
-      type: 'text',
-      text: `🔔 明日は整体のご予約日です！\n\n📅 ${reservation.date}（${reservation.time}）\n\nご来院をお待ちしております😊\nご変更はLINEからどうぞ。`,
+    await client.pushMessage({
+      to: userId,
+      messages: [{
+        type: 'text',
+        text: `🔔 明日は整体のご予約日です！\n\n📅 ${reservation.date}（${reservation.time}）\n\nご来院をお待ちしております😊\nご変更はLINEからどうぞ。`,
+      }],
     });
   } catch (e) {
     console.error('リマインド送信エラー:', e);
