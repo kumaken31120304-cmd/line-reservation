@@ -11,47 +11,42 @@ const client = new Client({
 // ─── メインイベントハンドラー ──────────────────────────────────────
 async function handleEvent(event) {
   if (event.type !== 'message' || event.message.type !== 'text') return;
-
   const text = event.message.text.trim();
-  const replyToken = event.replyToken;
-  const userId = event.source.userId;
+  const userId = event.source.userId; // replyTokenの代わりにuserIdを使用
 
   if (text.includes('予約') || text === 'メニュー') {
-    return replyMenu(replyToken);
+    return replyMenu(userId);
   }
   if (text.includes('空き') || text.includes('空き時間')) {
-    return replyAvailableSlots(replyToken);
+    return replyAvailableSlots(userId);
   }
   if (text.includes('確認') || text.includes('予約確認')) {
-    return replyUserReservations(replyToken, userId);
+    return replyUserReservations(userId);
   }
   if (text.includes('キャンセル')) {
-    return replyUserReservations(replyToken, userId, true);
+    return replyUserReservations(userId, true);
   }
-
   // デフォルト返答
-  return client.replyMessage(replyToken, {
+  return client.pushMessage(userId, {
     type: 'text',
     text: '「予約」と送信すると予約メニューが表示されます😊',
   });
 }
 
 // ─── 予約メニュー ─────────────────────────────────────────────────
-async function replyMenu(replyToken) {
-  return client.replyMessage(replyToken, buildMenuFlex());
+async function replyMenu(userId) {
+  return client.pushMessage(userId, buildMenuFlex());
 }
 
 // ─── 空き時間案内（今日〜3日分） ──────────────────────────────────
-async function replyAvailableSlots(replyToken) {
+async function replyAvailableSlots(userId) {
   const lines = ['📅 *直近の空き時間*\n'];
   const today = new Date();
-
   for (let i = 0; i < 3; i++) {
     const d = new Date(today);
     d.setDate(today.getDate() + i);
     const dateStr = formatDate(d);
     const label = i === 0 ? '今日' : i === 1 ? '明日' : dateStr;
-
     try {
       const slots = await getAvailableSlots(dateStr);
       if (slots.length === 0) {
@@ -63,32 +58,28 @@ async function replyAvailableSlots(replyToken) {
       lines.push(`${label}（${dateStr}）：取得失敗`);
     }
   }
-
   lines.push('\n詳細はこちら👇');
-
-  return client.replyMessage(replyToken, [
+  return client.pushMessage(userId, [
     { type: 'text', text: lines.join('\n') },
     buildMenuFlex(),
   ]);
 }
 
 // ─── 予約確認 ─────────────────────────────────────────────────────
-async function replyUserReservations(replyToken, userId, showCancel = false) {
+async function replyUserReservations(userId, showCancel = false) {
   try {
     const reservations = await getUserReservations(userId);
     const upcoming = reservations.filter(r => r.status !== 'キャンセル済');
-
     if (upcoming.length === 0) {
-      return client.replyMessage(replyToken, {
+      return client.pushMessage(userId, {
         type: 'text',
         text: '現在の予約はありません。\n「予約」と送信して予約してください😊',
       });
     }
-
-    return client.replyMessage(replyToken, buildReservationListFlex(upcoming, showCancel));
+    return client.pushMessage(userId, buildReservationListFlex(upcoming, showCancel));
   } catch (e) {
     console.error(e);
-    return client.replyMessage(replyToken, {
+    return client.pushMessage(userId, {
       type: 'text',
       text: '予約情報の取得に失敗しました。しばらく経ってから再度お試しください。',
     });
