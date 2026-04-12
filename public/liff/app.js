@@ -1,5 +1,5 @@
 // LIFFアプリID（.envのLIFF_IDと同じ値に書き換える）
-const LIFF_ID = 'YOUR_LIFF_ID';
+const LIFF_ID ="2009769390-HDWUsrH8";
 const API_BASE = ''; // 同一オリジンなので空でOK
 
 let userId = null;
@@ -22,7 +22,7 @@ window.addEventListener('load', async () => {
     showScreen('form-screen');
     initDateInput();
   } catch (e) {
-    showError('LIFFの初期化に失敗しました。\nLINEアプリから開いてください。');
+    showError('LIFFの初期化に失敗しました。\nError: ' + e.message);
   }
 });
 
