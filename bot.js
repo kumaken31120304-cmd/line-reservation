@@ -1,17 +1,22 @@
 const { messagingApi } = require('@line/bot-sdk');
 const { buildMenuFlex, buildReservationConfirmFlex, buildReservationListFlex, buildAvailableSlotsFlex } = require('./flexMessage');
 const { getAvailableSlots } = require('./calendar');
-const { getUserReservations } = require('./sheets');
+const { getUserReservations, cancelReservation } = require('./sheets');
 
 const client = new messagingApi.MessagingApiClient({
   channelAccessToken: process.env.CHANNEL_ACCESS_TOKEN,
 });
 
 async function handleEvent(event) {
+  const userId = event.source?.userId;
+  if (!userId) { console.warn('userId なし'); return; }
+
+  if (event.type === 'postback') {
+    return await handlePostback(event, userId);
+  }
+
   if (event.type !== 'message' || event.message.type !== 'text') return;
   const text = event.message.text.trim();
-  const userId = event.source.userId;
-  if (!userId) { console.warn('userId なし'); return; }
   console.log(`[handleEvent] userId=${userId}, text="${text}"`);
   try {
     if (text.includes('確認')) return await replyUserReservations(userId);
@@ -20,6 +25,22 @@ async function handleEvent(event) {
     if (text.includes('予約') || text === 'メニュー') return await replyMenu(userId);
     await push(userId, [{ type: 'text', text: '「予約」と送信すると予約メニューが表示されます😊' }]);
   } catch (e) { logError('handleEvent', e); }
+}
+
+async function handlePostback(event, userId) {
+  const params = new URLSearchParams(event.postback.data);
+  const action = params.get('action');
+  const id = params.get('id');
+
+  if (action === 'cancel' && id) {
+    try {
+      await cancelReservation(userId, id);
+      await push(userId, [{ type: 'text', text: '✅ 予約をキャンセルしました。\nまたのご利用をお待ちしております😊' }]);
+    } catch (e) {
+      logError('handlePostback cancel', e);
+      await push(userId, [{ type: 'text', text: `キャンセルに失敗しました。\n${e.message}` }]).catch(() => {});
+    }
+  }
 }
 
 async function push(userId, messages) {
