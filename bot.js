@@ -1,5 +1,5 @@
 const { messagingApi } = require('@line/bot-sdk');
-const { buildMenuFlex, buildReservationConfirmFlex, buildReservationListFlex } = require('./flexMessage');
+const { buildMenuFlex, buildReservationConfirmFlex, buildReservationListFlex, buildAvailableSlotsFlex } = require('./flexMessage');
 const { getAvailableSlots } = require('./calendar');
 const { getUserReservations } = require('./sheets');
 
@@ -49,19 +49,20 @@ async function replyMenu(userId) {
 }
 
 async function replyAvailableSlots(userId) {
-  const lines = ['📅 直近の空き時間\n'];
   const today = new Date();
+  const daysData = [];
   for (let i = 0; i < 3; i++) {
     const d = new Date(today); d.setDate(today.getDate() + i);
     const dateStr = formatDate(d);
-    const label = i === 0 ? '今日' : i === 1 ? '明日' : dateStr;
+    const dayNames = ['日', '月', '火', '水', '木', '金', '土'];
+    const dateJa = `${d.getMonth() + 1}月${d.getDate()}日（${dayNames[d.getDay()]}）`;
+    const label = i === 0 ? `今日  ${dateJa}` : i === 1 ? `明日  ${dateJa}` : dateJa;
     try {
       const slots = await getAvailableSlots(dateStr);
-      lines.push(slots.length === 0 ? `${label}（${dateStr}）：満席` : `${label}（${dateStr}）：${slots.join(' / ')}`);
-    } catch (e) { lines.push(`${label}（${dateStr}）：取得失敗`); }
+      daysData.push({ label, slots });
+    } catch (e) { daysData.push({ label, slots: [] }); }
   }
-  lines.push('\n詳細はこちら👇');
-  try { await push(userId, [{ type: 'text', text: lines.join('\n') }, buildMenuFlex()]); }
+  try { await push(userId, [buildAvailableSlotsFlex(daysData)]); }
   catch (e) { logError('replyAvailableSlots', e); }
 }
 

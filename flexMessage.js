@@ -105,4 +105,57 @@ function infoRow(label, value) {
   };
 }
 
-module.exports = { buildMenuFlex, buildReservationConfirmFlex, buildReservationListFlex };
+function buildAvailableSlotsFlex(daysData) {
+  const liffUrl = `https://liff.line.me/${process.env.LIFF_ID}`;
+  const dayContents = [];
+
+  daysData.forEach((day, i) => {
+    if (i > 0) dayContents.push({ type: 'separator', margin: 'md' });
+    dayContents.push({
+      type: 'box',
+      layout: 'vertical',
+      margin: i > 0 ? 'md' : 'none',
+      spacing: 'xs',
+      contents: [
+        { type: 'text', text: day.label, weight: 'bold', size: 'sm', color: '#4CAF50' },
+        day.slots.length === 0
+          ? { type: 'text', text: '😔 満席', size: 'sm', color: '#999999' }
+          : { type: 'text', text: '🕐 ' + day.slots.join('  /  '), size: 'sm', color: '#333333', wrap: true },
+      ],
+    });
+  });
+
+  return {
+    type: 'flex',
+    altText: '直近の空き時間',
+    contents: {
+      type: 'bubble',
+      header: {
+        type: 'box',
+        layout: 'vertical',
+        backgroundColor: '#4CAF50',
+        paddingAll: 'lg',
+        contents: [
+          { type: 'text', text: '📅 直近の空き時間', color: '#ffffff', size: 'lg', weight: 'bold', align: 'center' },
+          { type: 'text', text: '今後3日間の空き状況', color: '#E8F5E9', size: 'xs', align: 'center', margin: 'sm' },
+        ],
+      },
+      body: {
+        type: 'box',
+        layout: 'vertical',
+        paddingAll: 'lg',
+        contents: dayContents,
+      },
+      footer: {
+        type: 'box',
+        layout: 'vertical',
+        paddingAll: 'md',
+        contents: [
+          { type: 'button', style: 'primary', color: '#4CAF50', action: { type: 'uri', label: '📅 今すぐ予約する', uri: liffUrl } },
+        ],
+      },
+    },
+  };
+}
+
+module.exports = { buildMenuFlex, buildReservationConfirmFlex, buildReservationListFlex, buildAvailableSlotsFlex };
