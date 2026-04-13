@@ -23,7 +23,7 @@ function buildMenuFlex() {
         paddingAll: 'lg',
         contents: [
           menuButton('📅 予約する',      '#4CAF50', { type: 'uri',     label: '📅 予約する',      uri: liffUrl }),
-          menuButton('🕐 空き時間を見る', '#ffffff', { type: 'message', label: '🕐 空き時間を見る', text: '空き時間を見る' }, '#4CAF50'),
+          menuButton('🕐 直近の空き時間', '#ffffff', { type: 'message', label: '🕐 直近の空き時間', text: '空き時間を見る' }, '#4CAF50'),
           menuButton('📋 予約確認',      '#ffffff', { type: 'message', label: '📋 予約確認',      text: '予約確認' },       '#333333'),
           menuButton('❌ キャンセル',    '#ffffff', { type: 'message', label: '❌ キャンセル',    text: 'キャンセル' },     '#e53935'),
         ],
