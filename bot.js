@@ -14,10 +14,10 @@ async function handleEvent(event) {
   if (!userId) { console.warn('userId なし'); return; }
   console.log(`[handleEvent] userId=${userId}, text="${text}"`);
   try {
-    if (text.includes('予約') || text === 'メニュー') return await replyMenu(userId);
-    if (text.includes('空き')) return await replyAvailableSlots(userId);
     if (text.includes('確認')) return await replyUserReservations(userId);
     if (text.includes('キャンセル')) return await replyUserReservations(userId, true);
+    if (text.includes('空き')) return await replyAvailableSlots(userId);
+    if (text.includes('予約') || text === 'メニュー') return await replyMenu(userId);
     await push(userId, [{ type: 'text', text: '「予約」と送信すると予約メニューが表示されます😊' }]);
   } catch (e) { logError('handleEvent', e); }
 }
