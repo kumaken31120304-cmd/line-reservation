@@ -51,12 +51,12 @@ async function replyMenu(userId) {
 async function replyAvailableSlots(userId) {
   const today = new Date();
   const daysData = [];
-  for (let i = 0; i < 3; i++) {
+  for (let i = 1; i <= 3; i++) {
     const d = new Date(today); d.setDate(today.getDate() + i);
     const dateStr = formatDate(d);
     const dayNames = ['日', '月', '火', '水', '木', '金', '土'];
     const dateJa = `${d.getMonth() + 1}月${d.getDate()}日（${dayNames[d.getDay()]}）`;
-    const label = i === 0 ? `今日  ${dateJa}` : i === 1 ? `明日  ${dateJa}` : dateJa;
+    const label = i === 1 ? `明日  ${dateJa}` : dateJa;
     try {
       const slots = await getAvailableSlots(dateStr);
       daysData.push({ label, slots });
