@@ -158,4 +158,34 @@ function buildAvailableSlotsFlex(daysData) {
   };
 }
 
-module.exports = { buildMenuFlex, buildReservationConfirmFlex, buildReservationListFlex, buildAvailableSlotsFlex };
+function buildCancelConfirmFlex(r) {
+  return {
+    type: 'flex',
+    altText: '予約をキャンセルしました',
+    contents: {
+      type: 'bubble',
+      header: {
+        type: 'box', layout: 'vertical', backgroundColor: '#e53935', paddingAll: 'lg',
+        contents: [{ type: 'text', text: '❌ 予約をキャンセルしました', color: '#ffffff', size: 'md', weight: 'bold', align: 'center' }],
+      },
+      body: {
+        type: 'box', layout: 'vertical', spacing: 'md', paddingAll: 'lg',
+        contents: [
+          infoRow('お名前', r.name),
+          infoRow('日付', r.date),
+          infoRow('時間', r.time),
+          { type: 'separator', margin: 'md' },
+          { type: 'text', text: 'またのご利用をお待ちしております😊', color: '#888888', size: 'sm', align: 'center', margin: 'md', wrap: true },
+        ],
+      },
+      footer: {
+        type: 'box', layout: 'vertical', paddingAll: 'md',
+        contents: [
+          { type: 'button', style: 'primary', color: '#4CAF50', action: { type: 'message', label: '新しく予約する', text: '予約' } },
+        ],
+      },
+    },
+  };
+}
+
+module.exports = { buildMenuFlex, buildReservationConfirmFlex, buildReservationListFlex, buildAvailableSlotsFlex, buildCancelConfirmFlex };

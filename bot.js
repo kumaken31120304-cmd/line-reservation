@@ -1,5 +1,5 @@
 const { messagingApi } = require('@line/bot-sdk');
-const { buildMenuFlex, buildReservationConfirmFlex, buildReservationListFlex, buildAvailableSlotsFlex } = require('./flexMessage');
+const { buildMenuFlex, buildReservationConfirmFlex, buildReservationListFlex, buildAvailableSlotsFlex, buildCancelConfirmFlex } = require('./flexMessage');
 const { getAvailableSlots } = require('./calendar');
 const { getUserReservations, cancelReservation } = require('./sheets');
 
@@ -34,8 +34,8 @@ async function handlePostback(event, userId) {
 
   if (action === 'cancel' && id) {
     try {
-      await cancelReservation(userId, id);
-      await push(userId, [{ type: 'text', text: '✅ 予約をキャンセルしました。\nまたのご利用をお待ちしております😊' }]);
+      const cancelled = await cancelReservation(userId, id);
+      await push(userId, [buildCancelConfirmFlex(cancelled)]);
     } catch (e) {
       logError('handlePostback cancel', e);
       await push(userId, [{ type: 'text', text: `キャンセルに失敗しました。\n${e.message}` }]).catch(() => {});

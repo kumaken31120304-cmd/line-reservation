@@ -129,6 +129,8 @@ async function cancelReservation(userId, reservationId) {
     valueInputOption: 'RAW',
     requestBody: { values: [['キャンセル済']] },
   });
+
+  return rowToReservation(row);
 }
 
 // ─── 翌日の予約一覧（リマインド用） ──────────────────────────────
