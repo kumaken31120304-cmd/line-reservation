@@ -14,8 +14,15 @@ document.addEventListener('change', (e) => {
   const noneBox = document.getElementById('medical-none');
   if (e.target === noneBox && e.target.checked) {
     all.forEach(cb => { if (cb !== noneBox) cb.checked = false; });
+    document.getElementById('medical-other-text').classList.add('hidden');
   } else if (e.target !== noneBox && e.target.checked) {
     noneBox.checked = false;
+  }
+  const otherBox = document.getElementById('medical-other');
+  const otherText = document.getElementById('medical-other-text');
+  if (e.target === otherBox) {
+    otherText.classList.toggle('hidden', !otherBox.checked);
+    if (!otherBox.checked) otherText.value = '';
   }
 });
 
@@ -164,7 +171,11 @@ function buildConfirm() {
   const phone = document.getElementById('phone').value.trim();
   const symptoms = document.getElementById('symptoms').value.trim();
 
-  const medicalChecked = [...document.querySelectorAll('input[name="medical_history"]:checked')].map(cb => cb.value);
+  const otherTextVal = document.getElementById('medical-other-text').value.trim();
+  const medicalChecked = [...document.querySelectorAll('input[name="medical_history"]:checked')].map(cb => {
+    if (cb.value === 'その他' && otherTextVal) return `その他（${otherTextVal}）`;
+    return cb.value;
+  });
   const medicalHistory = medicalChecked.length > 0 ? medicalChecked.join('、') : '';
 
   document.getElementById('confirm-course').textContent = selectedCourse;
@@ -202,7 +213,11 @@ document.getElementById('reservation-form').addEventListener('submit', async (e)
   submitLabel.classList.add('hidden');
   submitSpinner.classList.remove('hidden');
 
-  const medicalChecked = [...document.querySelectorAll('input[name="medical_history"]:checked')].map(cb => cb.value);
+  const otherText = document.getElementById('medical-other-text').value.trim();
+  const medicalChecked = [...document.querySelectorAll('input[name="medical_history"]:checked')].map(cb => {
+    if (cb.value === 'その他' && otherText) return `その他（${otherText}）`;
+    return cb.value;
+  });
   const payload = {
     userId,
     course: selectedCourse,

@@ -269,6 +269,19 @@ body {
   line-height: 1.4;
 }
 
+.medical-other-text {
+  width: 100%;
+  padding: 10px 14px;
+  border: 1.5px solid #4CAF50;
+  border-radius: 10px;
+  font-size: 14px;
+  color: #333;
+  background: #f9fbe7;
+  outline: none;
+  resize: none;
+  margin-top: -4px;
+}
+
 /* ─── 時間スロット ─────────────────────────────────────── */
 .time-slots {
   display: grid;
