@@ -36,6 +36,56 @@ async function ensureHeaders(sheets) {
       requestBody: { values: [HEADERS] },
     });
   }
+
+  await ensureConditionalFormatting(sheets);
+}
+
+// ─── 条件付き書式（ステータス列の色分け） ───────────────────────────
+async function ensureConditionalFormatting(sheets) {
+  const spreadsheet = await sheets.spreadsheets.get({
+    spreadsheetId: process.env.GOOGLE_SHEET_ID,
+  });
+
+  const sheet = spreadsheet.data.sheets.find(s => s.properties.title === SHEET_NAME);
+  if (!sheet) return;
+
+  // すでに設定済みならスキップ
+  if (sheet.conditionalFormats && sheet.conditionalFormats.length > 0) return;
+
+  const sid = sheet.properties.sheetId;
+  const statusRange = { sheetId: sid, startRowIndex: 1, startColumnIndex: 8, endColumnIndex: 9 };
+
+  await sheets.spreadsheets.batchUpdate({
+    spreadsheetId: process.env.GOOGLE_SHEET_ID,
+    requestBody: {
+      requests: [
+        {
+          addConditionalFormatRule: {
+            index: 0,
+            rule: {
+              ranges: [statusRange],
+              booleanRule: {
+                condition: { type: 'TEXT_EQ', values: [{ userEnteredValue: '確定' }] },
+                format: { backgroundColor: { red: 0.714, green: 0.843, blue: 0.659 } }, // 緑
+              },
+            },
+          },
+        },
+        {
+          addConditionalFormatRule: {
+            index: 1,
+            rule: {
+              ranges: [statusRange],
+              booleanRule: {
+                condition: { type: 'TEXT_EQ', values: [{ userEnteredValue: 'キャンセル済' }] },
+                format: { backgroundColor: { red: 0.918, green: 0.6, blue: 0.6 } }, // 赤
+              },
+            },
+          },
+        },
+      ],
+    },
+  });
 }
 
 // ─── 全行取得 ─────────────────────────────────────────────────────
