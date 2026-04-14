@@ -56,6 +56,19 @@
           <h2 class="step-title">📅 希望日を選んでください</h2>
 
           <div class="form-group">
+            <label for="date">日付 <span class="required">*</span></label>
+            <input type="date" id="date" name="date" required />
+          </div>
+
+          <div class="form-group">
+            <label>時間 <span class="required">*</span></label>
+            <div id="time-slots" class="time-slots">
+              <p class="hint">日付を選択すると空き時間が表示されます</p>
+            </div>
+            <input type="hidden" id="time" name="time" />
+          </div>
+
+          <div class="form-group">
             <label>コース <span class="required">*</span></label>
             <div class="course-options">
               <label class="course-option">
@@ -81,19 +94,6 @@
                 </span>
               </label>
             </div>
-          </div>
-
-          <div class="form-group">
-            <label for="date">日付 <span class="required">*</span></label>
-            <input type="date" id="date" name="date" required />
-          </div>
-
-          <div class="form-group">
-            <label>時間 <span class="required">*</span></label>
-            <div id="time-slots" class="time-slots">
-              <p class="hint">日付を選択すると空き時間が表示されます</p>
-            </div>
-            <input type="hidden" id="time" name="time" />
           </div>
 
           <button type="button" class="btn btn-primary" onclick="goToStep(2)">次へ →</button>
