@@ -116,8 +116,47 @@ async function sendReminder(userId, reservation) {
   } catch (e) { logError('sendReminder', e); }
 }
 
+async function sendAdminNotification(reservation) {
+  const adminId = process.env.ADMIN_LINE_USER_ID;
+  console.log(`[sendAdminNotification] adminId=${adminId}, reservation=${JSON.stringify(reservation)}`);
+  if (!adminId) { console.warn('[sendAdminNotification] ADMIN_LINE_USER_ID が未設定'); return; }
+  try {
+    await push(adminId, [{
+      type: 'flex',
+      altText: '新しい予約が入りました',
+      contents: {
+        type: 'bubble',
+        header: {
+          type: 'box', layout: 'vertical', backgroundColor: '#1565C0', paddingAll: 'lg',
+          contents: [{ type: 'text', text: '🔔 新しい予約が入りました', color: '#ffffff', size: 'md', weight: 'bold', align: 'center' }],
+        },
+        body: {
+          type: 'box', layout: 'vertical', spacing: 'md', paddingAll: 'lg',
+          contents: [
+            infoRow('日付', reservation.date),
+            infoRow('時間', reservation.time),
+            infoRow('お名前', reservation.name),
+            infoRow('電話番号', reservation.phone),
+            ...(reservation.symptoms ? [infoRow('症状', reservation.symptoms)] : []),
+          ],
+        },
+      },
+    }]);
+  } catch (e) { logError('sendAdminNotification', e); }
+}
+
+function infoRow(label, value) {
+  return {
+    type: 'box', layout: 'horizontal',
+    contents: [
+      { type: 'text', text: label,        size: 'sm', color: '#888888', flex: 2 },
+      { type: 'text', text: value || '-', size: 'sm', color: '#333333', flex: 3, wrap: true },
+    ],
+  };
+}
+
 function formatDate(d) {
   return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
 }
 
-module.exports = { handleEvent, sendReservationConfirm, sendReminder };
+module.exports = { handleEvent, sendReservationConfirm, sendReminder, sendAdminNotification };
