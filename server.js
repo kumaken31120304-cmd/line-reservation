@@ -69,14 +69,14 @@ app.get('/api/slots', async (req, res) => {
 // ─── API: 予約作成 ────────────────────────────────────────────────
 app.post('/api/reserve', async (req, res) => {
   console.log('[/api/reserve] リクエスト受信');
-  const { userId, name, phone, date, time, symptoms } = req.body || {};
-  if (!userId || !name || !phone || !date || !time) {
+  const { userId, name, phone, date, time, course, symptoms } = req.body || {};
+  if (!userId || !name || !phone || !date || !time || !course) {
     return res.status(400).json({ error: '必須項目が不足しています' });
   }
   try {
     const { createReservation } = require('./sheets');
     const { sendReservationConfirm, sendAdminNotification } = require('./bot');
-    const reservation = await createReservation({ userId, name, phone, date, time, symptoms });
+    const reservation = await createReservation({ userId, name, phone, date, time, course, symptoms });
     console.log('[/api/reserve] 予約作成完了、管理者通知を送信');
     sendReservationConfirm(userId, reservation).catch(e => console.error('LINE通知エラー:', e.message));
     sendAdminNotification(reservation).catch(e => console.error('管理者通知エラー:', e.message));
@@ -99,7 +99,7 @@ app.get('/api/setup-sheet', async (req, res) => {
       scopes: ['https://www.googleapis.com/auth/spreadsheets'],
     });
     const sheets = google.sheets({ version: 'v4', auth });
-    const HEADERS = ['ステータス', '日付', '時間', '名前', '電話番号', '症状', '作成日時', '予約ID', 'LINEユーザーID', 'カレンダーイベントID'];
+    const HEADERS = ['ステータス', '日付', '時間', 'コース', '名前', '電話番号', '症状', '作成日時', '予約ID', 'LINEユーザーID', 'カレンダーイベントID'];
     await sheets.spreadsheets.values.update({
       spreadsheetId: process.env.GOOGLE_SHEET_ID,
       range: '予約データ!A1',

@@ -56,6 +56,34 @@
           <h2 class="step-title">📅 希望日を選んでください</h2>
 
           <div class="form-group">
+            <label>コース <span class="required">*</span></label>
+            <div class="course-options">
+              <label class="course-option">
+                <input type="radio" name="course" value="【初回限定】60分 ¥3,000" />
+                <span class="course-card">
+                  <span class="course-badge">初回限定</span>
+                  <span class="course-name">60分</span>
+                  <span class="course-price">¥3,000</span>
+                </span>
+              </label>
+              <label class="course-option">
+                <input type="radio" name="course" value="60分 ¥8,000" />
+                <span class="course-card">
+                  <span class="course-name">60分</span>
+                  <span class="course-price">¥8,000</span>
+                </span>
+              </label>
+              <label class="course-option">
+                <input type="radio" name="course" value="90分 ¥11,000" />
+                <span class="course-card">
+                  <span class="course-name">90分</span>
+                  <span class="course-price">¥11,000</span>
+                </span>
+              </label>
+            </div>
+          </div>
+
+          <div class="form-group">
             <label for="date">日付 <span class="required">*</span></label>
             <input type="date" id="date" name="date" required />
           </div>
@@ -101,6 +129,10 @@
           <h2 class="step-title">📋 予約内容をご確認ください</h2>
 
           <div class="confirm-box">
+            <div class="confirm-row">
+              <span class="confirm-label">コース</span>
+              <span id="confirm-course" class="confirm-value"></span>
+            </div>
             <div class="confirm-row">
               <span class="confirm-label">日付</span>
               <span id="confirm-date" class="confirm-value"></span>

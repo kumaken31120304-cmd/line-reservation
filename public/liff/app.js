@@ -5,6 +5,7 @@ const API_BASE = ''; // 同一オリジンなので空でOK
 let userId = null;
 let currentStep = 1;
 let selectedTime = null;
+let selectedCourse = null;
 
 // ─── 初期化 ─────────────────────────────────────────────────────
 window.addEventListener('load', async () => {
@@ -104,6 +105,11 @@ function goToStep(step) {
 
 // ─── バリデーション ──────────────────────────────────────────────
 function validateStep1() {
+  selectedCourse = document.querySelector('input[name="course"]:checked')?.value || null;
+  if (!selectedCourse) {
+    alert('コースを選択してください');
+    return false;
+  }
   const date = document.getElementById('date').value;
   if (!date) {
     alert('日付を選択してください');
@@ -146,6 +152,7 @@ function buildConfirm() {
   const phone = document.getElementById('phone').value.trim();
   const symptoms = document.getElementById('symptoms').value.trim();
 
+  document.getElementById('confirm-course').textContent = selectedCourse;
   document.getElementById('confirm-date').textContent = formatDateJa(date);
   document.getElementById('confirm-time').textContent = time;
   document.getElementById('confirm-name').textContent = name;
@@ -174,6 +181,7 @@ document.getElementById('reservation-form').addEventListener('submit', async (e)
 
   const payload = {
     userId,
+    course: selectedCourse,
     date: document.getElementById('date').value,
     time: document.getElementById('time').value,
     name: document.getElementById('name').value.trim(),
