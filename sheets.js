@@ -4,7 +4,11 @@ const { createCalendarEvent, deleteCalendarEvent } = require('./calendar');
 
 const SCOPES = ['https://www.googleapis.com/auth/spreadsheets'];
 const SHEET_NAME = '予約データ';
-const HEADERS = ['予約ID', 'LINEユーザーID', '名前', '電話番号', '日付', '時間', '症状', '作成日時', 'ステータス', 'カレンダーイベントID'];
+// 列順: A=ステータス B=日付 C=時間 D=名前 E=電話番号 F=症状 G=作成日時 H=予約ID I=LINEユーザーID J=カレンダーイベントID
+const HEADERS = ['ステータス', '日付', '時間', '名前', '電話番号', '症状', '作成日時', '予約ID', 'LINEユーザーID', 'カレンダーイベントID'];
+
+// 列インデックス定数
+const COL = { STATUS: 0, DATE: 1, TIME: 2, NAME: 3, PHONE: 4, SYMPTOMS: 5, CREATED_AT: 6, ID: 7, USER_ID: 8, CALENDAR_ID: 9 };
 
 function getAuth() {
   return new google.auth.GoogleAuth({
@@ -28,7 +32,7 @@ async function ensureHeaders(sheets) {
     range: `${SHEET_NAME}!A1:J1`,
   });
 
-  if (!res.data.values || res.data.values[0]?.[0] !== '予約ID') {
+  if (!res.data.values || res.data.values[0]?.[0] !== 'ステータス') {
     await sheets.spreadsheets.values.update({
       spreadsheetId: process.env.GOOGLE_SHEET_ID,
       range: `${SHEET_NAME}!A1`,
@@ -40,7 +44,7 @@ async function ensureHeaders(sheets) {
   await ensureConditionalFormatting(sheets);
 }
 
-// ─── 条件付き書式（ステータス列の色分け） ───────────────────────────
+// ─── 条件付き書式（ステータス列 A列 の色分け） ──────────────────────
 async function ensureConditionalFormatting(sheets) {
   const spreadsheet = await sheets.spreadsheets.get({
     spreadsheetId: process.env.GOOGLE_SHEET_ID,
@@ -49,42 +53,52 @@ async function ensureConditionalFormatting(sheets) {
   const sheet = spreadsheet.data.sheets.find(s => s.properties.title === SHEET_NAME);
   if (!sheet) return;
 
-  // すでに設定済みならスキップ
-  if (sheet.conditionalFormats && sheet.conditionalFormats.length > 0) return;
-
   const sid = sheet.properties.sheetId;
-  const statusRange = { sheetId: sid, startRowIndex: 1, startColumnIndex: 8, endColumnIndex: 9 };
+  const existingFormats = sheet.conditionalFormats || [];
+
+  // A列（index 0）に正しい書式が既にあればスキップ
+  const alreadyCorrect = existingFormats.some(f =>
+    f.ranges?.some(r => r.startColumnIndex === 0 && r.sheetId === sid)
+  );
+  if (alreadyCorrect) return;
+
+  const requests = [];
+
+  // 古い書式を全削除（インデックス0を繰り返し削除）
+  for (let i = 0; i < existingFormats.length; i++) {
+    requests.push({ deleteConditionalFormatRule: { sheetId: sid, index: 0 } });
+  }
+
+  // ステータス列（A列 = index 0）に新しい書式を追加
+  const statusRange = { sheetId: sid, startRowIndex: 1, startColumnIndex: 0, endColumnIndex: 1 };
+  requests.push({
+    addConditionalFormatRule: {
+      index: 0,
+      rule: {
+        ranges: [statusRange],
+        booleanRule: {
+          condition: { type: 'TEXT_EQ', values: [{ userEnteredValue: '確定' }] },
+          format: { backgroundColor: { red: 0.714, green: 0.843, blue: 0.659 } }, // 緑
+        },
+      },
+    },
+  });
+  requests.push({
+    addConditionalFormatRule: {
+      index: 1,
+      rule: {
+        ranges: [statusRange],
+        booleanRule: {
+          condition: { type: 'TEXT_EQ', values: [{ userEnteredValue: 'キャンセル済' }] },
+          format: { backgroundColor: { red: 0.918, green: 0.6, blue: 0.6 } }, // 赤
+        },
+      },
+    },
+  });
 
   await sheets.spreadsheets.batchUpdate({
     spreadsheetId: process.env.GOOGLE_SHEET_ID,
-    requestBody: {
-      requests: [
-        {
-          addConditionalFormatRule: {
-            index: 0,
-            rule: {
-              ranges: [statusRange],
-              booleanRule: {
-                condition: { type: 'TEXT_EQ', values: [{ userEnteredValue: '確定' }] },
-                format: { backgroundColor: { red: 0.714, green: 0.843, blue: 0.659 } }, // 緑
-              },
-            },
-          },
-        },
-        {
-          addConditionalFormatRule: {
-            index: 1,
-            rule: {
-              ranges: [statusRange],
-              booleanRule: {
-                condition: { type: 'TEXT_EQ', values: [{ userEnteredValue: 'キャンセル済' }] },
-                format: { backgroundColor: { red: 0.918, green: 0.6, blue: 0.6 } }, // 赤
-              },
-            },
-          },
-        },
-      ],
-    },
+    requestBody: { requests },
   });
 }
 
@@ -99,16 +113,16 @@ async function getAllRows(sheets) {
 
 function rowToReservation(row) {
   return {
-    id: row[0],
-    userId: row[1],
-    name: row[2],
-    phone: row[3],
-    date: row[4],
-    time: row[5],
-    symptoms: row[6],
-    createdAt: row[7],
-    status: row[8],
-    calendarEventId: row[9],
+    id:            row[COL.ID],
+    userId:        row[COL.USER_ID],
+    name:          row[COL.NAME],
+    phone:         row[COL.PHONE],
+    date:          row[COL.DATE],
+    time:          row[COL.TIME],
+    symptoms:      row[COL.SYMPTOMS],
+    createdAt:     row[COL.CREATED_AT],
+    status:        row[COL.STATUS],
+    calendarEventId: row[COL.CALENDAR_ID],
   };
 }
 
@@ -119,7 +133,7 @@ async function createReservation({ userId, name, phone, date, time, symptoms }) 
 
   // 重複チェック
   const rows = await getAllRows(sheets);
-  const conflict = rows.find(r => r[4] === date && r[5] === time && r[8] !== 'キャンセル済');
+  const conflict = rows.find(r => r[COL.DATE] === date && r[COL.TIME] === time && r[COL.STATUS] !== 'キャンセル済');
   if (conflict) throw new Error('その時間帯はすでに予約済みです');
 
   // Googleカレンダーに登録
@@ -127,7 +141,8 @@ async function createReservation({ userId, name, phone, date, time, symptoms }) 
 
   const id = uuidv4();
   const createdAt = new Date().toLocaleString('ja-JP', { timeZone: 'Asia/Tokyo' });
-  const row = [id, userId, name, phone, date, time, symptoms || '', createdAt, '確定', calendarEventId];
+  // 列順: ステータス, 日付, 時間, 名前, 電話番号, 症状, 作成日時, 予約ID, LINEユーザーID, カレンダーイベントID
+  const row = ['確定', date, time, name, phone, symptoms || '', createdAt, id, userId, calendarEventId];
 
   await sheets.spreadsheets.values.append({
     spreadsheetId: process.env.GOOGLE_SHEET_ID,
@@ -136,8 +151,7 @@ async function createReservation({ userId, name, phone, date, time, symptoms }) 
     requestBody: { values: [row] },
   });
 
-  const reservation = { id, userId, name, phone, date, time, symptoms, createdAt, status: '確定' };
-  return reservation;
+  return { id, userId, name, phone, date, time, symptoms, createdAt, status: '確定' };
 }
 
 // ─── ユーザーの予約一覧 ───────────────────────────────────────────
@@ -147,7 +161,7 @@ async function getUserReservations(userId) {
 
   const today = new Date().toISOString().slice(0, 10);
   return rows
-    .filter(r => r[1] === userId && r[4] >= today)
+    .filter(r => r[COL.USER_ID] === userId && r[COL.DATE] >= today)
     .map(rowToReservation);
 }
 
@@ -160,22 +174,22 @@ async function cancelReservation(userId, reservationId) {
   });
 
   const rows = res.data.values || [];
-  const rowIndex = rows.findIndex(r => r[0] === reservationId && r[1] === userId);
+  const rowIndex = rows.findIndex(r => r[COL.ID] === reservationId && r[COL.USER_ID] === userId);
   if (rowIndex < 0) throw new Error('予約が見つかりません');
 
   const row = rows[rowIndex];
-  if (row[8] === 'キャンセル済') throw new Error('すでにキャンセル済みです');
+  if (row[COL.STATUS] === 'キャンセル済') throw new Error('すでにキャンセル済みです');
 
   // カレンダーから削除
-  if (row[9]) {
-    try { await deleteCalendarEvent(row[9]); } catch {}
+  if (row[COL.CALENDAR_ID]) {
+    try { await deleteCalendarEvent(row[COL.CALENDAR_ID]); } catch {}
   }
 
-  // シートのステータス更新（9列目 = I列）
+  // シートのステータス更新（A列 = ステータス）
   const sheetRow = rowIndex + 1;
   await sheets.spreadsheets.values.update({
     spreadsheetId: process.env.GOOGLE_SHEET_ID,
-    range: `${SHEET_NAME}!I${sheetRow}`,
+    range: `${SHEET_NAME}!A${sheetRow}`,
     valueInputOption: 'RAW',
     requestBody: { values: [['キャンセル済']] },
   });
@@ -193,7 +207,7 @@ async function getTomorrowReservations() {
   const tomorrowStr = tomorrow.toISOString().slice(0, 10);
 
   return rows
-    .filter(r => r[4] === tomorrowStr && r[8] === '確定')
+    .filter(r => r[COL.DATE] === tomorrowStr && r[COL.STATUS] === '確定')
     .map(rowToReservation);
 }
 
