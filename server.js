@@ -68,15 +68,18 @@ app.get('/api/slots', async (req, res) => {
 
 // ─── API: 予約作成 ────────────────────────────────────────────────
 app.post('/api/reserve', async (req, res) => {
+  console.log('[/api/reserve] リクエスト受信');
   const { userId, name, phone, date, time, symptoms } = req.body || {};
   if (!userId || !name || !phone || !date || !time) {
     return res.status(400).json({ error: '必須項目が不足しています' });
   }
   try {
     const { createReservation } = require('./sheets');
-    const { sendReservationConfirm } = require('./bot');
+    const { sendReservationConfirm, sendAdminNotification } = require('./bot');
     const reservation = await createReservation({ userId, name, phone, date, time, symptoms });
+    console.log('[/api/reserve] 予約作成完了、管理者通知を送信');
     sendReservationConfirm(userId, reservation).catch(e => console.error('LINE通知エラー:', e.message));
+    sendAdminNotification(reservation).catch(e => console.error('管理者通知エラー:', e.message));
     res.json({ success: true, reservation });
   } catch (e) {
     console.error('予約作成エラー:', e.message);
