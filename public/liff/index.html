@@ -118,6 +118,22 @@
             <textarea id="symptoms" name="symptoms" rows="3" placeholder="例：腰痛、肩こりなど"></textarea>
           </div>
 
+          <div class="form-group">
+            <label>既往歴</label>
+            <div class="checkbox-options">
+              <label class="checkbox-option"><input type="checkbox" name="medical_history" value="脊柱疾患（椎間板ヘルニア、脊柱管狭窄症など）" /><span>脊柱疾患（椎間板ヘルニア、脊柱管狭窄症など）</span></label>
+              <label class="checkbox-option"><input type="checkbox" name="medical_history" value="脳血管疾患（脳梗塞、脳出血、くも膜下出血など）" /><span>脳血管疾患（脳梗塞、脳出血、くも膜下出血など）</span></label>
+              <label class="checkbox-option"><input type="checkbox" name="medical_history" value="呼吸器疾患（慢性閉塞性肺疾患、肺炎、気管支喘息など）" /><span>呼吸器疾患（慢性閉塞性肺疾患、肺炎、気管支喘息など）</span></label>
+              <label class="checkbox-option"><input type="checkbox" name="medical_history" value="循環器疾患（心不全、狭心症、心筋梗塞など）" /><span>循環器疾患（心不全、狭心症、心筋梗塞など）</span></label>
+              <label class="checkbox-option"><input type="checkbox" name="medical_history" value="骨折、脱臼、捻挫など" /><span>骨折、脱臼、捻挫など</span></label>
+              <label class="checkbox-option"><input type="checkbox" name="medical_history" value="骨粗鬆症" /><span>骨粗鬆症</span></label>
+              <label class="checkbox-option"><input type="checkbox" name="medical_history" value="治療中のがん" /><span>治療中のがん</span></label>
+              <label class="checkbox-option"><input type="checkbox" name="medical_history" value="妊娠中" /><span>妊娠中</span></label>
+              <label class="checkbox-option"><input type="checkbox" name="medical_history" value="なし" id="medical-none" /><span>なし</span></label>
+              <label class="checkbox-option"><input type="checkbox" name="medical_history" value="その他" /><span>その他</span></label>
+            </div>
+          </div>
+
           <div class="btn-row">
             <button type="button" class="btn btn-secondary" onclick="goToStep(1)">← 戻る</button>
             <button type="button" class="btn btn-primary" onclick="goToStep(3)">次へ →</button>
@@ -152,6 +168,10 @@
             <div class="confirm-row" id="confirm-symptoms-row">
               <span class="confirm-label">症状</span>
               <span id="confirm-symptoms" class="confirm-value"></span>
+            </div>
+            <div class="confirm-row" id="confirm-medical-row">
+              <span class="confirm-label">既往歴</span>
+              <span id="confirm-medical" class="confirm-value"></span>
             </div>
           </div>
 

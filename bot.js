@@ -133,11 +133,13 @@ async function sendAdminNotification(reservation) {
         body: {
           type: 'box', layout: 'vertical', spacing: 'md', paddingAll: 'lg',
           contents: [
+            infoRow('コース', reservation.course),
             infoRow('日付', reservation.date),
             infoRow('時間', reservation.time),
             infoRow('お名前', reservation.name),
             infoRow('電話番号', reservation.phone),
             ...(reservation.symptoms ? [infoRow('症状', reservation.symptoms)] : []),
+            ...(reservation.medicalHistory ? [infoRow('既往歴', reservation.medicalHistory)] : []),
           ],
         },
       },

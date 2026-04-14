@@ -231,6 +231,44 @@ body {
   color: #4CAF50;
 }
 
+/* ─── チェックボックス（既往歴） ───────────────────────── */
+.checkbox-options {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-top: 4px;
+}
+
+.checkbox-option {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 14px;
+  border: 1.5px solid #e0e0e0;
+  border-radius: 10px;
+  cursor: pointer;
+  transition: all 0.2s;
+  background: #fafafa;
+}
+
+.checkbox-option:has(input:checked) {
+  border-color: #4CAF50;
+  background: #e8f5e9;
+}
+
+.checkbox-option input[type="checkbox"] {
+  width: 18px;
+  height: 18px;
+  accent-color: #4CAF50;
+  flex-shrink: 0;
+}
+
+.checkbox-option span {
+  font-size: 14px;
+  color: #333;
+  line-height: 1.4;
+}
+
 /* ─── 時間スロット ─────────────────────────────────────── */
 .time-slots {
   display: grid;

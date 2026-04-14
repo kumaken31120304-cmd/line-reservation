@@ -7,6 +7,18 @@ let currentStep = 1;
 let selectedTime = null;
 let selectedCourse = null;
 
+// ─── 既往歴「なし」排他制御 ──────────────────────────────────────
+document.addEventListener('change', (e) => {
+  if (e.target.name !== 'medical_history') return;
+  const all = document.querySelectorAll('input[name="medical_history"]');
+  const noneBox = document.getElementById('medical-none');
+  if (e.target === noneBox && e.target.checked) {
+    all.forEach(cb => { if (cb !== noneBox) cb.checked = false; });
+  } else if (e.target !== noneBox && e.target.checked) {
+    noneBox.checked = false;
+  }
+});
+
 // ─── 初期化 ─────────────────────────────────────────────────────
 window.addEventListener('load', async () => {
   try {
@@ -152,6 +164,9 @@ function buildConfirm() {
   const phone = document.getElementById('phone').value.trim();
   const symptoms = document.getElementById('symptoms').value.trim();
 
+  const medicalChecked = [...document.querySelectorAll('input[name="medical_history"]:checked')].map(cb => cb.value);
+  const medicalHistory = medicalChecked.length > 0 ? medicalChecked.join('、') : '';
+
   document.getElementById('confirm-course').textContent = selectedCourse;
   document.getElementById('confirm-date').textContent = formatDateJa(date);
   document.getElementById('confirm-time').textContent = time;
@@ -164,6 +179,14 @@ function buildConfirm() {
     symptomsRow.classList.remove('hidden');
   } else {
     symptomsRow.classList.add('hidden');
+  }
+
+  const medicalRow = document.getElementById('confirm-medical-row');
+  if (medicalHistory) {
+    document.getElementById('confirm-medical').textContent = medicalHistory;
+    medicalRow.classList.remove('hidden');
+  } else {
+    medicalRow.classList.add('hidden');
   }
 }
 
@@ -179,6 +202,7 @@ document.getElementById('reservation-form').addEventListener('submit', async (e)
   submitLabel.classList.add('hidden');
   submitSpinner.classList.remove('hidden');
 
+  const medicalChecked = [...document.querySelectorAll('input[name="medical_history"]:checked')].map(cb => cb.value);
   const payload = {
     userId,
     course: selectedCourse,
@@ -187,6 +211,7 @@ document.getElementById('reservation-form').addEventListener('submit', async (e)
     name: document.getElementById('name').value.trim(),
     phone: document.getElementById('phone').value.trim(),
     symptoms: document.getElementById('symptoms').value.trim(),
+    medicalHistory: medicalChecked.join('、'),
   };
 
   try {

@@ -63,6 +63,7 @@ function buildReservationConfirmFlex(r) {
         contents: [
           infoRow('お名前', r.name), infoRow('コース', r.course), infoRow('日付', r.date), infoRow('時間', r.time), infoRow('電話番号', r.phone),
           ...(r.symptoms ? [infoRow('症状', r.symptoms)] : []),
+          ...(r.medicalHistory ? [infoRow('既往歴', r.medicalHistory)] : []),
           { type: 'separator', margin: 'md' },
           { type: 'text', text: 'ご来院をお待ちしております😊', color: '#4CAF50', size: 'sm', align: 'center', margin: 'md' },
         ],

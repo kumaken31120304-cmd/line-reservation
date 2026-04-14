@@ -4,11 +4,11 @@ const { createCalendarEvent, deleteCalendarEvent } = require('./calendar');
 
 const SCOPES = ['https://www.googleapis.com/auth/spreadsheets'];
 const SHEET_NAME = '予約データ';
-// 列順: A=ステータス B=日付 C=時間 D=コース E=名前 F=電話番号 G=症状 H=作成日時 I=予約ID J=LINEユーザーID K=カレンダーイベントID
-const HEADERS = ['ステータス', '日付', '時間', 'コース', '名前', '電話番号', '症状', '作成日時', '予約ID', 'LINEユーザーID', 'カレンダーイベントID'];
+// 列順: A=ステータス B=日付 C=時間 D=コース E=名前 F=電話番号 G=症状 H=既往歴 I=作成日時 J=予約ID K=LINEユーザーID L=カレンダーイベントID
+const HEADERS = ['ステータス', '日付', '時間', 'コース', '名前', '電話番号', '症状', '既往歴', '作成日時', '予約ID', 'LINEユーザーID', 'カレンダーイベントID'];
 
 // 列インデックス定数
-const COL = { STATUS: 0, DATE: 1, TIME: 2, COURSE: 3, NAME: 4, PHONE: 5, SYMPTOMS: 6, CREATED_AT: 7, ID: 8, USER_ID: 9, CALENDAR_ID: 10 };
+const COL = { STATUS: 0, DATE: 1, TIME: 2, COURSE: 3, NAME: 4, PHONE: 5, SYMPTOMS: 6, MEDICAL_HISTORY: 7, CREATED_AT: 8, ID: 9, USER_ID: 10, CALENDAR_ID: 11 };
 
 function getAuth() {
   return new google.auth.GoogleAuth({
@@ -29,7 +29,7 @@ async function getSheetsClient() {
 async function ensureHeaders(sheets) {
   const res = await sheets.spreadsheets.values.get({
     spreadsheetId: process.env.GOOGLE_SHEET_ID,
-    range: `${SHEET_NAME}!A1:K1`,
+    range: `${SHEET_NAME}!A1:L1`,
   });
 
   if (!res.data.values || res.data.values[0]?.length !== HEADERS.length || res.data.values[0]?.[0] !== 'ステータス') {
@@ -106,29 +106,30 @@ async function ensureConditionalFormatting(sheets) {
 async function getAllRows(sheets) {
   const res = await sheets.spreadsheets.values.get({
     spreadsheetId: process.env.GOOGLE_SHEET_ID,
-    range: `${SHEET_NAME}!A2:K`,
+    range: `${SHEET_NAME}!A2:L`,
   });
   return res.data.values || [];
 }
 
 function rowToReservation(row) {
   return {
-    id:            row[COL.ID],
-    userId:        row[COL.USER_ID],
-    name:          row[COL.NAME],
-    phone:         row[COL.PHONE],
-    date:          row[COL.DATE],
-    time:          row[COL.TIME],
-    course:        row[COL.COURSE],
-    symptoms:      row[COL.SYMPTOMS],
-    createdAt:     row[COL.CREATED_AT],
-    status:        row[COL.STATUS],
+    id:             row[COL.ID],
+    userId:         row[COL.USER_ID],
+    name:           row[COL.NAME],
+    phone:          row[COL.PHONE],
+    date:           row[COL.DATE],
+    time:           row[COL.TIME],
+    course:         row[COL.COURSE],
+    symptoms:       row[COL.SYMPTOMS],
+    medicalHistory: row[COL.MEDICAL_HISTORY],
+    createdAt:      row[COL.CREATED_AT],
+    status:         row[COL.STATUS],
     calendarEventId: row[COL.CALENDAR_ID],
   };
 }
 
 // ─── 予約作成 ─────────────────────────────────────────────────────
-async function createReservation({ userId, name, phone, date, time, course, symptoms }) {
+async function createReservation({ userId, name, phone, date, time, course, symptoms, medicalHistory }) {
   const sheets = await getSheetsClient();
   await ensureHeaders(sheets);
 
@@ -142,17 +143,17 @@ async function createReservation({ userId, name, phone, date, time, course, symp
 
   const id = uuidv4();
   const createdAt = new Date().toLocaleString('ja-JP', { timeZone: 'Asia/Tokyo' });
-  // 列順: ステータス, 日付, 時間, コース, 名前, 電話番号, 症状, 作成日時, 予約ID, LINEユーザーID, カレンダーイベントID
-  const row = ['確定', date, time, course || '', name, phone, symptoms || '', createdAt, id, userId, calendarEventId];
+  // 列順: ステータス, 日付, 時間, コース, 名前, 電話番号, 症状, 既往歴, 作成日時, 予約ID, LINEユーザーID, カレンダーイベントID
+  const row = ['確定', date, time, course || '', name, phone, symptoms || '', medicalHistory || '', createdAt, id, userId, calendarEventId];
 
   await sheets.spreadsheets.values.append({
     spreadsheetId: process.env.GOOGLE_SHEET_ID,
-    range: `${SHEET_NAME}!A:K`,
+    range: `${SHEET_NAME}!A:L`,
     valueInputOption: 'RAW',
     requestBody: { values: [row] },
   });
 
-  return { id, userId, name, phone, date, time, course, symptoms, createdAt, status: '確定' };
+  return { id, userId, name, phone, date, time, course, symptoms, medicalHistory, createdAt, status: '確定' };
 }
 
 // ─── ユーザーの予約一覧 ───────────────────────────────────────────
@@ -171,7 +172,7 @@ async function cancelReservation(userId, reservationId) {
   const sheets = await getSheetsClient();
   const res = await sheets.spreadsheets.values.get({
     spreadsheetId: process.env.GOOGLE_SHEET_ID,
-    range: `${SHEET_NAME}!A:K`,
+    range: `${SHEET_NAME}!A:L`,
   });
 
   const rows = res.data.values || [];
