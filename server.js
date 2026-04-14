@@ -84,6 +84,32 @@ app.post('/api/reserve', async (req, res) => {
   }
 });
 
+// ─── API: シートのヘッダー・書式を初期化 ─────────────────────────
+app.get('/api/setup-sheet', async (req, res) => {
+  try {
+    const { google } = require('googleapis');
+    const auth = new google.auth.GoogleAuth({
+      credentials: {
+        client_email: process.env.GOOGLE_SERVICE_ACCOUNT_EMAIL,
+        private_key: process.env.GOOGLE_PRIVATE_KEY.replace(/\\n/g, '\n'),
+      },
+      scopes: ['https://www.googleapis.com/auth/spreadsheets'],
+    });
+    const sheets = google.sheets({ version: 'v4', auth });
+    const HEADERS = ['ステータス', '日付', '時間', '名前', '電話番号', '症状', '作成日時', '予約ID', 'LINEユーザーID', 'カレンダーイベントID'];
+    await sheets.spreadsheets.values.update({
+      spreadsheetId: process.env.GOOGLE_SHEET_ID,
+      range: '予約データ!A1',
+      valueInputOption: 'RAW',
+      requestBody: { values: [HEADERS] },
+    });
+    res.json({ success: true, message: 'ヘッダーを更新しました', headers: HEADERS });
+  } catch (e) {
+    console.error('セットアップエラー:', e.message);
+    res.status(500).json({ error: e.message });
+  }
+});
+
 // ─── API: 予約確認 ────────────────────────────────────────────────
 app.get('/api/reservations', async (req, res) => {
   const { userId } = req.query;
